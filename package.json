@@ -2,7 +2,12 @@
   "name": "mkt",
   "version": "1.0.0",
   "dependencies": {
-     "express": "^4.14.1"
+    "express": "^4.14.1",
+    "formidable": "^1.1.1",
+    "node-libcurl": "^1.1.0",
+    "node-notifier": "^5.0.2",
+    "string": "^3.3.3",
+    "urllib": "^2.21.2"
   },
   "description": "",
   "main": "/server/server.js",
