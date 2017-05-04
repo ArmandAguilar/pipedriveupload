@@ -3,6 +3,8 @@ var express = require('express');
 var fs = require('fs');
 var formidable = require('formidable');
 var urllib = require('urllib');
+var token = require('./src/keys');
+
 const notifier = require('node-notifier');
 
 // instanciar
@@ -115,19 +117,22 @@ app.post('/processingclients/', function (req, res){
 
               }
               else {
-                if (data.col4 == 'Medio de contacto ') {
+                if (data.col4 == 'Contacto') {
 
                 }
                 else {
-                      if (data.col5 == 'Telefono ') {
+                      if (data.col5 == 'Puesto') {
 
                       }
                       else {
-                            if (data.col6 == 'Web') {
+                            if (data.col6 == 'Telefono') {
 
                             }
                             else{
-                                strPipieDrive = data.col1 + ' ' + data.col2 + ' ' + data.col3 + ' ' + data.col4 + ' ' + data.col5 + ' ' + data.col6 + ' ';
+                              if (data.col6 == 'Correo') {
+                                    strPipieDrive = data.col1 + ' ' + data.col2 + ' ' + data.col3 + ' ' + data.col4 + ' ' + data.col5 + ' ' + data.col6 + ' ';
+                              }
+
                             }
                       }
                 }
@@ -192,14 +197,14 @@ app.post('/processingorganitationes/', function (req, res){
 
                             }
                             else{
-                                strPipieDrive = data.col1 + ' ' + data.col2 + ' ' + data.col3 + ' ' + data.col4 + ' ' + data.col5 + ' ' + data.col6 + ' ';
-                                curl_organitations();
+                                strPipieDrive = data.col1 + ' ' + data.col2 + ' ' + data.col3;
+                                curl_organitations(data.col1,data.col2,data.col3);
                             }
                       }
                 }
               }
             }
-            console.log(strPipieDrive);
+            /*console.log(strPipieDrive);*/
             });
 
         }
@@ -223,38 +228,117 @@ function Nitication(titles,messages)
           });
 }
 /*curls function */
-function curl_organitations()
+function curl_organitations(empresa,sector,web)
 {
-
-  urllib.request('http://cnodejs.org/', function (err, data, res) {
-    if (err) {
-      throw err; // you need to handle error
-    }
-    console.log(res.statusCode);
-    console.log(res.headers);
-    // data is Buffer instance
-    console.log(data.toString());
-  });
-  /*var curl = new Curl();
-
-  curl.setOpt( 'URL', 'www.google.com' );
-  curl.setOpt( 'FOLLOWLOCATION', true );
-
-  curl.on( 'end', function( statusCode, body, headers ) {
-
-      console.info( statusCode );
-      console.info( '---' );
-      console.info( body.length );
-      console.info( '---' );
-      console.info( this.getInfo( 'TOTAL_TIME' ) );
-
-      this.close();
-  });
-
-  curl.on( 'error', curl.close.bind( curl ) );
-  curl.perform();*/
+  var strftime = require('strftime') // not required in browsers
+  var FechaString = strftime('%Y-%M-%d', new Date())
+  var idSector = profilesOrganitation(sector);
+  urllib.request('https://api.pipedrive.com/v1/organizations?api_token=' + token , {
+  method: 'POST',
+  data: {
+    'name': empresa,
+    'owner_id' : '1245108',
+    'add_time' : FechaString,
+    'dd8264651561775a4d9eb4f843811bc599649cb6' : web,
+    '73f181bd11548510a4dcfadafc036ff5dcdde8ae' : idSector
+  }
+});
 
 }
+function curl_persons(empresa,sector,contacto,puesto,telefono,correo)
+{
+  /* Fisrt .- i found the organitation for this person */
+  urllib.request('$urlBE =  "https://api.pipedrive.com/v1/organizations/find?term=$_POST[txtEmpresa]&api_token=b86bd50a1f8822315169836c4c619641c03cdc01', {
+  method: 'POST',
+  data: {
+    'name': empresa,
+    'owner_id' : '1245108',
+    'add_time' : FechaString,
+    'dd8264651561775a4d9eb4f843811bc599649cb6' : web,
+    '73f181bd11548510a4dcfadafc036ff5dcdde8ae' : idSector
+  }
+});
+
+  /*
+  var strftime = require('strftime') // not required in browsers
+  var FechaString = strftime('%Y-%M-%d', new Date())
+  var idSector = profilesOrganitation(sector);
+  urllib.request('https://api.pipedrive.com/v1/organizations?api_token=b86bd50a1f8822315169836c4c619641c03cdc01', {
+  method: 'POST',
+  data: {
+    'name': empresa,
+    'owner_id' : '1245108',
+    'add_time' : FechaString,
+    'dd8264651561775a4d9eb4f843811bc599649cb6' : web,
+    '73f181bd11548510a4dcfadafc036ff5dcdde8ae' : idSector
+  }
+});*/
+
+
+}
+/*Swicth of Profile's organitation  */
+
+function profilesOrganitation(pOrganitation)
+{
+    switch (pOrganitation) {
+       case 'Industrial':
+                idProfilesOrganitation = 142;
+        break;
+      case 'Energía':
+                idProfilesOrganitation = 143;
+        break;
+      case 'Comercial':
+                idProfilesOrganitation = 144;
+        break;
+      case 'DesarrolladoraGral':
+                  idProfilesOrganitation = 145;
+        break;
+      case 'Buffete-Arq-Ing':
+                    idProfilesOrganitation = 146;
+        break;
+     case 'Hotelero':
+                   idProfilesOrganitation = 147;
+        break;
+    case 'FondoDeInversion':
+                  idProfilesOrganitation = 148;
+       break;
+    case 'GerenciaDeProyectos':
+                 idProfilesOrganitation = 149;
+         break;
+    case 'Retail':
+                idProfilesOrganitation = 150;
+        break;
+    case 'Entretenimiento':
+                idProfilesOrganitation = 151;
+        break;
+  case 'Salud':
+              idProfilesOrganitation = 152;
+      break;
+  case 'Vivienda':
+              idProfilesOrganitation = 153;
+      break;
+    case 'ConstructoraGral':
+                idProfilesOrganitation = 154;
+        break;
+    case 'Gobierno':
+              idProfilesOrganitation = 155;
+        break;
+    case 'PersonaFísica':
+              idProfilesOrganitation = 156;
+        break;
+    case 'InfraestructuraPublica':
+              idProfilesOrganitation = 157;
+        break;
+    case 'Educación':
+            idProfilesOrganitation = 264;
+      break;
+
+      default:
+              idProfilesOrganitation = 0;
+    }
+    return  idProfilesOrganitation;
+}
+
 
 // lisent
 app.listen(9000);
