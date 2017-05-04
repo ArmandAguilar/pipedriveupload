@@ -248,7 +248,7 @@ function curl_organitations(empresa,sector,web)
 function curl_persons(empresa,sector,contacto,puesto,telefono,correo)
 {
   /* Fisrt .- i found the organitation for this person */
-  urllib.request('$urlBE =  "https://api.pipedrive.com/v1/organizations/find?term=$_POST[txtEmpresa]&api_token=b86bd50a1f8822315169836c4c619641c03cdc01', {
+  urllib.request('https://api.pipedrive.com/v1/organizations/find?term=' + empresa + '&api_token=' token, {
   method: 'POST',
   data: {
     'name': empresa,
@@ -258,21 +258,6 @@ function curl_persons(empresa,sector,contacto,puesto,telefono,correo)
     '73f181bd11548510a4dcfadafc036ff5dcdde8ae' : idSector
   }
 });
-
-  /*
-  var strftime = require('strftime') // not required in browsers
-  var FechaString = strftime('%Y-%M-%d', new Date())
-  var idSector = profilesOrganitation(sector);
-  urllib.request('https://api.pipedrive.com/v1/organizations?api_token=b86bd50a1f8822315169836c4c619641c03cdc01', {
-  method: 'POST',
-  data: {
-    'name': empresa,
-    'owner_id' : '1245108',
-    'add_time' : FechaString,
-    'dd8264651561775a4d9eb4f843811bc599649cb6' : web,
-    '73f181bd11548510a4dcfadafc036ff5dcdde8ae' : idSector
-  }
-});*/
 
 
 }
