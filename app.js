@@ -4,7 +4,7 @@ var fs = require('fs');
 var formidable = require('formidable');
 var urllib = require('urllib');
 var token = require('./src/keys');
-
+var S = require('string');
 const notifier = require('node-notifier');
 
 // instanciar
@@ -83,7 +83,7 @@ res.end();
 
 /* Method post for upload files in the server and to process cvs by pipedrive*/
 
-/*by clientes*/
+/*by clinets*/
 app.post('/processingclients/', function (req, res){
   res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
   res.header('Expires', '-1');
@@ -117,20 +117,24 @@ app.post('/processingclients/', function (req, res){
 
               }
               else {
-                if (data.col4 == 'Contacto') {
+                if (data.col3 == 'Contacto') {
 
                 }
                 else {
-                      if (data.col5 == 'Puesto') {
+                      if (data.col4 == 'Puesto') {
 
                       }
                       else {
-                            if (data.col6 == 'Telefono') {
+                            if (data.col5 == 'Telefono') {
 
                             }
                             else{
                               if (data.col6 == 'Correo') {
-                                    strPipieDrive = data.col1 + ' ' + data.col2 + ' ' + data.col3 + ' ' + data.col4 + ' ' + data.col5 + ' ' + data.col6 + ' ';
+
+                              }
+                              else{
+                                      /*strPipieDrive = data.col1 + ' ' + data.col2 + ' ' + data.col3 + ' ' + data.col4 + ' ' + data.col5 + ' ' + data.col6 + ' ' ;*/
+                                      curl_persons(data.col1,data.col2,data.col3,data.col4,data.col5,data.col6);
                               }
 
                             }
@@ -198,7 +202,7 @@ app.post('/processingorganitationes/', function (req, res){
                             }
                             else{
                                 strPipieDrive = data.col1 + ' ' + data.col2 + ' ' + data.col3;
-                                curl_organitations(data.col1,data.col2,data.col3);
+                                //curl_organitations(data.col1,data.col2,data.col3);
                             }
                       }
                 }
@@ -231,7 +235,7 @@ function Nitication(titles,messages)
 function curl_organitations(empresa,sector,web)
 {
   var strftime = require('strftime') // not required in browsers
-  var FechaString = strftime('%Y-%M-%d', new Date())
+  var FechaString = strftime('%Y-%M-%d', new Date());
   var idSector = profilesOrganitation(sector);
   urllib.request('https://api.pipedrive.com/v1/organizations?api_token=' + token , {
   method: 'POST',
@@ -245,22 +249,202 @@ function curl_organitations(empresa,sector,web)
 });
 
 }
+
 function curl_persons(empresa,sector,contacto,puesto,telefono,correo)
 {
-  /* Fisrt .- i found the organitation for this person */
-  urllib.request('https://api.pipedrive.com/v1/organizations/find?term=' + empresa + '&api_token=' token, {
-  method: 'POST',
-  data: {
-    'name': empresa,
-    'owner_id' : '1245108',
-    'add_time' : FechaString,
-    'dd8264651561775a4d9eb4f843811bc599649cb6' : web,
-    '73f181bd11548510a4dcfadafc036ff5dcdde8ae' : idSector
-  }
-});
+  /* i make trim in the vars of the function */
+  var txtEmpresa = S(empresa).trim().s;
+  var txtSector =  S(sector).trim().s;
+  var txtContacto = S(contacto).trim().s;
+  var txtPuesto = S(puesto).trim().s;
+  var txtTelefono = S(telefono).trim().s;
+  var strftime = require('strftime');
 
+  /* var for all rutine */
+  var idEmpresa = '';
+  var nomEmpresa = '';
+
+  /*Exampale code */
+  /*for (var i = 0; i < strJson['data'].length; i++) {
+    console.log(strJson['data'][i]['name']);
+  }*/
+
+  /* Fisrt .- i found the organitation for this person */
+  urllib.request('https://api.pipedrive.com/v1/organizations/find?term=' + txtEmpresa + '&api_token='  + token, function (err, data, res) {
+            var httpResults = data.toString();
+            var strJson = JSON.parse(httpResults);
+            for (var i = 0; i < strJson['data'].length; i++)
+                {
+                    idEmpresa = strJson['data'][i]['id'];
+                    nomEmpresa = strJson['data'][i]['name'];
+                  }
+                  console.log("The id is intro of function :" + idEmpresa );
+                  /*check if we have a Id not null */
+                  console.log("The id es :" + idEmpresa );
+                  if (idEmpresa > 0)
+                   {
+                     var FechaString = strftime('%Y-%M-%d', new Date());
+                     var idS  = SectorPersons(txtSector);
+                     var strHttp = urllib.request('https://api.pipedrive.com/v1/persons?api_token=' + token , {
+                                  method: 'POST',
+                                  data: {
+                                          'name': txtContacto,
+                                          'owner_id' : '1245108',
+                                          'add_time' : FechaString,
+                                          'org_id' : idEmpresa,
+                                          'email' : correo,
+                                          'phone' : txtTelefono,
+                                          'add_time' : FechaString,
+                                          '1bb54c0884f935866cdd97445f3ece584d5f49f3': idS
+                                        }
+                                    });
+                      /* here set the var of Person before insert in the data base */
+
+
+                      /*we add the business in the section´s 18 */
+                      setDeal(idEmpresa,idPerson,namePerson,nameOrganitation);
+                    }
+                  else{
+                          /* if business is empty */
+                          /*we inserts the organitation */
+                          urllib.request('https://api.pipedrive.com/v1/organizations?api_token=' + token , {
+                                method: 'POST',
+                                data: {
+                                'name': empresa,
+                                'owner_id' : '1245108',
+                                'add_time' : FechaString
+                              }
+                            });
+                        /*get the new id`s business */
+                        var idOrganitationInsert = getIdOrganitation(empresa);
+                        var strHttp = urllib.request('https://api.pipedrive.com/v1/persons?api_token=' + token , {
+                                     method: 'POST',
+                                     data: {
+                                             'name': txtContacto,
+                                             'owner_id' : '1245108',
+                                             'add_time' : FechaString,
+                                             'org_id' : idOrganitationInsert,
+                                             'email' : correo,
+                                             'phone' : txtTelefono,
+                                             'add_time' : FechaString,
+                                             '1bb54c0884f935866cdd97445f3ece584d5f49f3': idS
+                                           }
+                                       });
+
+                      }
+              });
 
 }
+/*this fucn get the id of person before  insert in the record of data base*/
+function getIdPerson(txtPerson)
+{
+  var idPerson = 0;
+  urllib.request('https://api.pipedrive.com/v1/persons?/find?term=' + txtOrganitation + '&api_token='  + token, function (err, data, res) {
+            var httpResults = data.toString();
+            var strJson = JSON.parse(httpResults);
+            for (var i = 0; i < strJson['data'].length; i++)
+                {
+                    return idEmpresa = strJson['data'][i]['id'];
+                  }
+            });
+
+}
+
+/* set a new deal of business */
+function setDeal(idOrganitation,idPerson,namePerson,nameOrganitation)
+{
+
+  var strHttp = urllib.request('https://api.pipedrive.com/v1/deals?api_token=' + token , {
+               method: 'POST',
+               data: {
+                       'title': 'Nuevo negocio (' + nameOrganitation + ')',
+                       'value' : '0',
+                       'currency' : 'MXN',
+                       'user_id' : '1245108',
+                       'person_id' :idPerson,
+                       'org_id' : idOrganitation
+                       'status': 'open',
+                       'stage_id': 18
+                     }
+                 });
+
+}
+
+/*get idBusiness*/
+function getIdOrganitation(txtOrganitation)
+{
+      var idEmpresa = 0;
+      urllib.request('https://api.pipedrive.com/v1/organizations/find?term=' + txtOrganitation + '&api_token='  + token, function (err, data, res) {
+                var httpResults = data.toString();
+                var strJson = JSON.parse(httpResults);
+                for (var i = 0; i < strJson['data'].length; i++)
+                    {
+                        return idEmpresa = strJson['data'][i]['id'];
+                      }
+                });
+}
+
+/*Switch of Persons */
+function SectorPersons(pSector)
+{
+
+
+  switch (pSector) {
+    case 'Industrial':
+          pSector = 242;
+    break;
+    case 'Energía':
+          pSector = 243;
+    break;
+    case 'Comercial':
+          pSector = 244;
+    break;
+    case 'DesarrolladoraGral':
+          pSector = 245;
+    break;
+    case 'Buffete-Arq-Ing':
+          pSector = 246;
+    break;
+    case 'Hotelero':
+          pSector = 247;
+    break;
+    case 'FondoDeInversion':
+          pSector = 248;
+    break;
+    case 'GerenciaDeProyectos':
+          pSector = 249;
+    break;
+    case 'Retail':
+          pSector = 250;
+    break;
+    case 'Entretenimiento':
+          pSector = 251;
+    break;
+    case 'Salud':
+          pSector = 252;
+    break;
+    case 'Vivienda':
+          pSector = 253;
+    break;
+    case 'ConstructoraGral':
+          pSector = 254;
+    break;
+    case 'Gobierno':
+          pSector = 255;
+    break;
+    case 'Particular':
+          pSector = 256;
+    break;
+    case 'InfraestructuraPublica':
+          pSector = 258;
+    break;
+    case 'Varios':
+          pSector = 259;
+    break;
+    }
+
+}
+
 /*Swicth of Profile's organitation  */
 
 function profilesOrganitation(pOrganitation)
